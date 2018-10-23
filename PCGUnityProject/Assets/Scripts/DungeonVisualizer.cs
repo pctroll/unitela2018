@@ -49,7 +49,6 @@ public class DungeonVisualizer : MonoBehaviour
     /// </summary>
     private void Clear()
     {
-        print("Visualizer.Clear");
         if (cellList == null || cellList.Count == 0)
             return;
         foreach (GameObject obj in cellList)

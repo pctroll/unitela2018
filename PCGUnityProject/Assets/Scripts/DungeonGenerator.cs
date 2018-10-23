@@ -16,7 +16,7 @@ public class DungeonGenerator : MonoBehaviour
         if (dungeon == null || visualizer == null)
             Debug.LogError("Dungeon or Visualizer not set up");
         
-        Show();
+        // Show();
     }
 
     private void Update()

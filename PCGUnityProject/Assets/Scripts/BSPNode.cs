@@ -8,27 +8,20 @@ public enum BSPNodeType
 
 public class BSPNode
 {
-    private BSPNodeType _type;
+    // public BSPNodeType type;
     public SplitType splitDirection;
-    public BSPNodeType Type
-    {
-        get { return _type; }
-    }
+
     public Rect area;
     public Rect block;
     public Dungeon dungeon;
     public BSPNode left;
     public BSPNode right;
 
-    public static int cutVal = 10;
-
-    //public int depth;
-
     public BSPNode(Rect area, Dungeon dungeon)
     {
         this.area = area;
         this.dungeon = dungeon;
-        this._type = BSPNodeType.Branch;
+        // this.type = BSPNodeType.Branch;
         this.block = Rect.zero;
         this.left = null;
         this.right = null;
@@ -39,17 +32,11 @@ public class BSPNode
         if (left == null && right == null)
             return block;
         
-        if (left != null && right != null)
-        {
-            int randNum = Random.Range(0, 99);
-            if (randNum % 2 == 0)
-                return right.GetBlock();
-            return left.GetBlock();
-        }
-        else if (left != null && right == null)
-            return left.GetBlock();
-        else
+        int randNum = Random.Range(0, 99);
+        if (randNum % 2 == 0)
             return right.GetBlock();
+        return left.GetBlock();
+
     }
 
     public static Blob SplitArea(Rect area, int minCutValue)
@@ -69,10 +56,9 @@ public class BSPNode
         else if (area.width > area.height)
             b.splitType = SplitType.Vertical;
 
-        // Rect[] areas = new Rect[2];
         float divider, cut;
-        divider = Random.Range(0.4f, 0.6f);
-        divider = 0.5f;
+        divider = Random.Range(0.3f, 0.7f);
+        // divider = 0.5f;
         if (b.splitType == SplitType.Horizontal)
         {
             cut = Mathf.RoundToInt(area.height * divider);

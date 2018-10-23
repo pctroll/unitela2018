@@ -10,9 +10,17 @@ public class Dungeon : MonoBehaviour
     /// <summary>
     /// Minimum Acceptable Size
     /// </summary>
-    /// [
     [Range(2, 100)]
     public int minAcceptSize;
+    [Space(2)]
+    [Header("Visual Settings")]
+    [SerializeField]
+    private int _mapIndex = 0;
+    [SerializeField]
+    private int _blockIndex = 1;
+    [SerializeField]
+    private int _bridgeIndex = 2;
+    
     /// <summary>
     /// Dungeon area
     /// </summary>
@@ -29,55 +37,65 @@ public class Dungeon : MonoBehaviour
 
     private Queue<BSPNode> _queue;
     private Stack<BSPNode> _stack;
+    private Stack<int> _tempStack;
+    private int _tempCounter;
 
     public void Init()
     {
-        BSPNode.cutVal = minAcceptSize;
-        // print("Dungeon.Init");
         area = new Rect();
         area.xMin = 0;
         area.yMin = 0;
         area.xMax = maxWidth;
         area.yMax = maxHeight;
         grid = new int[maxHeight, maxWidth];
+        int i, j;
+        for (i = 0; i < maxHeight; i++)
+        {
+            for (j = 0; j < maxWidth; j++)
+            {
+                grid[i, j] = _mapIndex;
+            }
+        }
         root = new BSPNode(area, this);
         _queue = new Queue<BSPNode>();
         _stack = new Stack<BSPNode>();
         _queue.Enqueue(root);
-        // _stack.Push(root);
+        _stack.Push(root);
+
+        _tempStack = new Stack<int>();
+        _tempCounter++;
+        _tempStack.Push(_tempCounter);
     }
 
     public void BindBlocks(Rect a, Rect b, SplitType split)
     {
-        //print("BindBlocks");
-        int originX, originY, targetX, targetY;
+        int i, j;
+        int origin, target;
+
         if (split == SplitType.Horizontal)
         {
-            originX = (int)Random.Range(a.xMin + 1, a.xMax - 1);
-            originY = (int)a.center.x;
-            targetX = originX;
-            targetY = (int)b.center.y;
+            // connect with VERTICAL line
+            j = (int)a.center.x;
+            origin = (int)a.center.y;
+            target = (int)b.center.y;
+            print("o:" + origin + "   t:" + target);
+            print("y: " + j);
+            for (i = origin; i <= target; i++)
+            {
+                grid[i, j] = _bridgeIndex;
+            }
         }
         else
         {
-            originX = (int)a.center.x;
-            originY = (int)Random.Range(a.yMin + 1, a.yMax - 1);
-            targetX = (int)b.center.x;
-            targetY = originY;
-        }
-        //print("origin: (" + originX + "," + originY + ")");
-        //print("target: (" + targetX + "," + targetY + ")");
-
-        int i, j;
-        for (i = originY; i <= targetY; i++)
-        {
-            // print("i: " + i);
-            for (j = originX; j <= targetX; j++)
+            // connect with HORIZONTAL line
+            i = (int)a.center.y;
+            origin = (int)a.center.x;
+            target = (int)b.center.x;
+            print("o:" + origin + "   t:" + target);
+            print("x: " + i);
+            for (j = origin; j <= target; j++)
             {
-                // print("j: " + j);
-                // print("(" + j + "," + i + ")");
-                if (grid[i,j] == 0)
-                    grid[i, j] = 1;
+                grid[i, j] = _bridgeIndex;
             }
         }
 
@@ -95,7 +113,7 @@ public class Dungeon : MonoBehaviour
         {
             for (j = x; j < w; j++)
             {
-                grid[i, j] = 1;
+                grid[i, j] = _blockIndex;
             }
         }
     }
@@ -123,15 +141,30 @@ public class Dungeon : MonoBehaviour
             _queue.Enqueue(n.left);
             _queue.Enqueue(n.right);
 
-            // _stack.Push(n.left);
-            // _stack.Push(n.right);
+            _stack.Push(n.left);
+            _stack.Push(n.right);
         }
 
-        
+        while (_stack.Count != 0)
+        {
+            BSPNode n = _stack.Pop();
+            if (n.left == null)
+                continue;
+            
+            BindBlocks(n.left.area, n.right.area, n.splitDirection);
+        }
     }
 
-    public void BindNodes()
+    public Blob BindNodes(BSPNode a, BSPNode b)
     {
+        if (a == null && b == null)
+        {
+            return null;
+        }
+        Blob blob = new Blob();
+        blob.areaA = a.GetBlock();
+        blob.areaB = b.GetBlock();
+        return blob;
     }
 
     private void Start()
