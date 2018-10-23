@@ -25,8 +25,6 @@ public class Dungeon : MonoBehaviour
     /// Dungeon area
     /// </summary>
     private Rect area;
-    // public Dictionary<int, List<BSPNode>> tree;
-    // public HashSet<BSPNode> leaves;
 
     public delegate Blob Split(Rect area);
     public Split splitCall;
@@ -153,18 +151,6 @@ public class Dungeon : MonoBehaviour
             
             BindBlocks(n.left.area, n.right.area, n.splitDirection);
         }
-    }
-
-    public Blob BindNodes(BSPNode a, BSPNode b)
-    {
-        if (a == null && b == null)
-        {
-            return null;
-        }
-        Blob blob = new Blob();
-        blob.areaA = a.GetBlock();
-        blob.areaB = b.GetBlock();
-        return blob;
     }
 
     private void Start()
