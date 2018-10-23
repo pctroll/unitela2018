@@ -17,8 +17,8 @@ public class Dungeon : MonoBehaviour
     /// Dungeon area
     /// </summary>
     private Rect area;
-    public Dictionary<int, List<BSPNode>> tree;
-    public HashSet<BSPNode> leaves;
+    // public Dictionary<int, List<BSPNode>> tree;
+    // public HashSet<BSPNode> leaves;
 
     public delegate Blob Split(Rect area);
     public Split splitCall;
@@ -28,6 +28,7 @@ public class Dungeon : MonoBehaviour
     public int[,] grid;
 
     private Queue<BSPNode> _queue;
+    private Stack<BSPNode> _stack;
 
     public void Init()
     {
@@ -41,12 +42,11 @@ public class Dungeon : MonoBehaviour
         grid = new int[maxHeight, maxWidth];
         root = new BSPNode(area, this);
         _queue = new Queue<BSPNode>();
+        _stack = new Stack<BSPNode>();
+        _queue.Enqueue(root);
+        // _stack.Push(root);
     }
 
-    public void AddNode(BSPNode node)
-    {
-        _queue.Enqueue(node);
-    }
     public void BindBlocks(Rect a, Rect b, SplitType split)
     {
         //print("BindBlocks");
@@ -85,28 +85,17 @@ public class Dungeon : MonoBehaviour
 
     public void BlockToGrid(BSPNode node)
     {
-        // print("-------------");
-        // print("BlockToGrid");
-        // print("area");
-        Rect area = node.area;
-        Rect block = node.block;
-        // print(area);
-        // print("xMin:" + area.xMin + ", yMin:" + area.yMin + ", xMax:" + area.xMax + ", yMax:" + area.yMax);
-        // print("block");
-        // print(node.block);
-        // print("xMin:" + block.xMin + ", yMin:" + block.yMin + ", xMax:" + block.xMax + ", yMax:" + block.yMax);
         int i, j, x, y, w, h;
         x = (int)node.block.xMin;
         y = (int)node.block.yMin;
         w = (int)node.block.xMax;
         h = (int)node.block.yMax;
-        //print("i:" + (int)block.y + " j:" + (int)block.x + " w:" + w + " h:" + h);
+        
         for (i = y; i < h; i++)
         {
             for (j = x; j < w; j++)
             {
                 grid[i, j] = 1;
-                //print("x:" + j + ", y:" + i + " - " + node.type);
             }
         }
     }
@@ -115,95 +104,39 @@ public class Dungeon : MonoBehaviour
     public void Build()
     {
         Init();
-        _queue.Enqueue(root);
         while (_queue.Count != 0)
         {
             BSPNode n = _queue.Dequeue();
-            n.Split();
+            
+            Blob b = BSPNode.SplitArea(n.area, minAcceptSize);
+            if (b == null)
+            {
+                n.block = BSPNode.CreateBlock(n.area);
+                BlockToGrid(n);
+                continue;
+            }
+            
+            n.splitDirection = b.splitType;
+            n.left = new BSPNode(b.areaA, this);
+            n.right = new BSPNode(b.areaB, this);
+
+            _queue.Enqueue(n.left);
+            _queue.Enqueue(n.right);
+
+            // _stack.Push(n.left);
+            // _stack.Push(n.right);
         }
-        // Raster(root);
+
+        
     }
 
-    private void Raster(BSPNode node)
+    public void BindNodes()
     {
-        if (node == null)
-            return;
-        if (node.left == null && node.right == null)
-        {
-            BlockToGrid(node);
-            return;
-        }
-        Raster(node.left);
-        Raster(node.right);
     }
 
-    private void Awake()
+    private void Start()
     {
-        tree = new Dictionary<int, List<BSPNode>>();
-        leaves = new HashSet<BSPNode>();
+        grid = new int[1, 1];        
     }
-
-    public Blob SplitArea(Rect area)
-    {
-        //print("SplitArea");
-        int val = (int)Mathf.Max(area.width, area.height);
-        // print("area: " + area);
-        // Debug.Log("val: " + val);
-        // Debug.Log("min: " + minAcceptSize);
-        if (val < minAcceptSize)
-        {
-            // print("stop splitting");
-            return null;
-        }
-        // print("start splitting");
-        //print("SplittingNode");
-        //print("area");
-        //print(area);
-        //print("----");
-        Rect[] areas = new Rect[2];
-        bool isHeightMax = area.height >= area.width;
-        float divider, cut;//, cutTop;
-        divider = Random.Range(0.4f, 0.6f);
-        divider = 0.5f;
-        Blob blob = new Blob();
-        if (isHeightMax)
-        {
-            blob.splitType = SplitType.Horizontal;
-            cut = Mathf.RoundToInt(area.height * divider);
-            //cutTop = Mathf.CeilToInt(area.height * divider);
-
-            areas[0].x = area.x;
-            areas[0].y = area.y;
-            areas[0].height = cut;
-            areas[0].width = area.width;
-
-            areas[1].x = area.x;
-            areas[1].y = cut+1;
-            areas[1].height = area.height - cut;
-            areas[1].width = area.width;
-        }
-        else
-        {
-            blob.splitType = SplitType.Vertical;
-            cut = Mathf.FloorToInt(area.width * divider);
-            //cutTop = Mathf.CeilToInt(area.width * divider);
-
-            areas[0].x = area.x;
-            areas[0].y = area.y;
-            areas[0].height = area.height;
-            areas[0].width = cut;
-
-            areas[1].x = cut=1;
-            areas[1].y = area.y;
-            areas[1].height = area.height;
-            areas[1].width = area.width - cut;
-        }
-        print("area 0: " + areas[0].ToString());
-        print("area 1: " + areas[1].ToString());
-        blob.areaLeft = areas[0];
-        blob.areaRight = areas[1];
-        return blob;
-    }
-
 
 }

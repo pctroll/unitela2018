@@ -9,7 +9,7 @@ public class DungeonVisualizer : MonoBehaviour
     [SerializeField]
     private DungeonCellStore _cellStore;
     [SerializeField]
-    private Dungeon _dungeon;
+    // private Dungeon _dungeon;
     private List<GameObject> cellList;
 
     /// <summary>
@@ -63,26 +63,6 @@ public class DungeonVisualizer : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        // Rect r = new Rect();
-        // r.xMin = 1;
-        // r.xMax = 3;
-        // r.yMin = 1;
-        // r.yMax = 3;
-        // print("r: " + r.ToString());
         cellList = new List<GameObject>();
-        _dungeon.Init();
-        _dungeon.Build();
-        Render(_dungeon.grid);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            _dungeon.Init();
-            _dungeon.Build();
-            Render(_dungeon.grid);
-        }
     }
 }
